@@ -27,11 +27,13 @@
 #include "utils.h"
 #include "aes.h"
 #include "des.h"
+#include "sm4.h"
 #include "pearson.h"
 
 
 #define ALG_AES                 0
 #define ALG_DES                 1
+#define ALG_SM4                 2
 /*
 #define ALG_DES_AFTER           2
 #define ALG_DES_BEFORE_SMALL    3

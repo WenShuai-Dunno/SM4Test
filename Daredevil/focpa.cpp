@@ -155,6 +155,7 @@ int first_order(Config & conf)
 
     if (conf.algo == ALG_AES) bitsperbyte = 8;
     else if (conf.algo == ALG_DES) bitsperbyte = 4;
+    else if (conf.algo == ALG_SM4) bitsperbyte = 8;
 
     for (int bit=0; bit >= 0 && bit < bitsperbyte; bit=(bit!=-1)?bit+1:bit) {
       if (conf.bitnum == -2) bit = -1;

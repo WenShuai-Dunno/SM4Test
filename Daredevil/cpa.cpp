@@ -40,6 +40,10 @@ int construct_guess (TypeGuess ***guess, uint32_t alg, Matrix *m, uint32_t n_m, 
       ret = construct_guess_DES (guess, m, n_m, bytenum, R, des_switch, sbox, n_keys, bit);
       if (ret < 0) return -1;
       break;
+    case ALG_SM4:
+      ret = construct_guess_SM4 (guess, m, n_m, bytenum, R, sbox, n_keys, bit);
+      if (ret < 0) return -1;
+      break;
     default:
       fprintf (stderr, "Algorithm is not supported (yet).\n");
       return -1;

@@ -51,6 +51,7 @@
 #define ALG_DES_AFTER           2
 #define ALG_DES_BEFORE_SMALL    3
 #define ALG_DES_AFTER_SMALL     4
+#define ALG_SM4                 5
 */
 
 using namespace std;

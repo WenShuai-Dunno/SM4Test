@@ -737,6 +737,9 @@ int load_config(Config & config, const char * conf_file)
       }else if (!tmp_algo.compare("DES")){
         config.algo = ALG_DES;
         config.total_n_keys = 64;
+      }else if (!tmp_algo.compare("SM4")){
+        config.algo = ALG_SM4;
+        config.total_n_keys = 256;
       }else
           fprintf(stderr, "[WARNING]\tUnknown algorithm %s\n", tmp_algo.c_str());
     }else if (line.find("des_switch") != string::npos) {
@@ -848,10 +851,10 @@ int load_config(Config & config, const char * conf_file)
   /* Make sure that if a single bit is attacked, the parameter is not greater
    * than the number of bits of the target algorithm.
    */
-  if ((config.algo == ALG_DES && config.bitnum > 3) || (config.algo == ALG_AES &&
-              config.bitnum > 7)){
+  if ((config.algo == ALG_DES && config.bitnum > 3) || 
+      ((config.algo == ALG_AES || config.algo == ALG_SM4) && config.bitnum > 7)){
     fprintf(stderr, "Error: Invalid target bit, value too large for %s.\n",
-            config.algo ? "DES" : "AES");
+            config.algo == ALG_DES ? "DES" : (config.algo == ALG_AES ? "AES" : "SM4"));
     return -1;
   }
 
@@ -862,6 +865,9 @@ int load_config(Config & config, const char * conf_file)
         config.key_size = 8;
     }
     if(config.algo == ALG_AES) {
+        config.key_size = 16;
+    }
+    if(config.algo == ALG_SM4) {
         config.key_size = 16;
     }
   }
@@ -928,7 +934,7 @@ void print_config(Config &conf)
 
   printf("\tReturn Type:\t\t %c\n", conf.type_return);
   printf("\tWindow size:\t\t %i\n", conf.window);
-  printf("\tAlgorithm:\t\t %s\n", conf.algo ? "DES" : "AES");
+  printf("\tAlgorithm:\t\t %s\n", conf.algo == ALG_DES ? "DES" : (conf.algo == ALG_AES ? "AES" : "SM4"));
 
   printf("\tRound:\t\t\t %i\n", conf.round);
   if (conf.bytenum == -1)
@@ -948,7 +954,7 @@ void print_config(Config &conf)
   else if (conf.complete_correct_key != NULL) {
     printf("0x");
     for(int i = 0; i < conf.key_size; i++) {
-      printf("%02x ", conf.algo ? conf.original_correct_key[i] : conf.complete_correct_key[i]);
+      printf("%02x ", (conf.algo == ALG_DES) ? conf.original_correct_key[i] : conf.complete_correct_key[i]);
     }
     printf("\n");
   }
