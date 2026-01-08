@@ -27,7 +27,6 @@
 #include "utils.h"
 #include "aes.h"
 #include "des.h"
-#include "sm4.h"
 #include "pearson.h"
 
 

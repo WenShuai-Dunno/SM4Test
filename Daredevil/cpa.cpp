@@ -21,6 +21,7 @@
 #include <iostream>
 #include "cpa.h"
 #include "omp.h"
+#include "sm4.h"
 
 
 /* Given the messages stored in m, use the bytenum-th byte to construct
@@ -41,7 +42,7 @@ int construct_guess (TypeGuess ***guess, uint32_t alg, Matrix *m, uint32_t n_m, 
       if (ret < 0) return -1;
       break;
     case ALG_SM4:
-      ret = construct_guess_SM4_whitebox (guess, m, n_m, bytenum, R, sbox, n_keys, bit);
+      ret = construct_guess_SM4 (guess, m, n_m, bytenum, R, sbox, n_keys, bit);
       if (ret < 0) return -1;
       break;
     default:

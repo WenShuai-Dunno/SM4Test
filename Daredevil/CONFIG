@@ -1,55 +1,136 @@
 # Version 1.0
-# 白盒SM4配置文件
+
+## This file describes the syntax and the possible options that can be specified in the configuration file (which represents an experiment). ##
+
+# Lines starting with # are comments. #
+
+# Usage of the program: ./main -c experiment_file
+# The file example represents a minimal working example: ./main -c example 
+# This (CONFIG) file can also be passed as argument to the program: ./main -c CONFIG
+
+# General structure for the traces #
 
 [Traces]
+
+# The number of files containing traces
 files=1
+
+# The type of the traces:
+# f: 32 bit floating point
+# d: 64 bit floating point
+# i: 8 bit integer
+# u: unsigned 8 bit integer
 trace_type=f
+
+# Whether the input file (specified in trace below) needs to be transposed (done on-the-fly when reading the file) or not. 
+# When using this in combination with the Tracer and Deadpool project this option should be set to true.
 transpose=true
+
+# The first index in the time samples where to start computing correlation.
 index=0
+
+# The number of time samples starting from index to consider.
 nsamples=3000
+
+# The path to the (possibly multiple) files, their number of lines and columns. The dimensions are needed for the moment in order to know how to read the files and store them in memory. Syntax:
+# trace=path rows columns
 trace=tracefile 1000000 3000
+
+# General structure to create the guesses, it is essentially the same as for the traces. #
+# This are the known plaintexts, the tool will create from these plaintexts the guesses
+# automagically.
 
 [Guesses]
 files=1
 guess_type=u
 transpose=true
-# 注意：白盒SM4需要至少12字节（X1,X2,X3）或16字节（X0,X1,X2,X3）
+
 guess=plaintext 1000000 16
 
+# General configuration options. #
+
 [General]
+
+# The number of threads used in the computation
 threads=8
+
+# The order of the attack.
+# 1: first-order (default)
+# 2: second-order, if window=1 corresponds to second order moment
+# n (>2): n-th order standardized moments 
 order=1
+
+# The return type of the correlation.
 return_type=double
-# 白盒SM4通常不需要窗口攻击
-window=0
 
-# 关键修改1：将算法改为SM4
-algorithm=SM4
+# The size of the window when computing 2-order CPA
+# Warning, window starts indexing at the position of the first index.
+# e.g. i=23, window=4 => 23, 24, 25, 26
+window=3
 
-# 关键修改2：指定白盒SM4的查找表文件
-# position=LUT/SM4_WHITEBOX_SBOX
-# position=LUT/SM4_WHITEBOX_T_OUTPUT
-position=LUT/SM4_WHITEBOX_LUT
+# The algorithm to attack can be
+# AES
+# DES
+algorithm=AES
 
+# The position to attack, must be specified as a path to the file containing 
+# the corresponding lookup table. Warning, there is a specific trigger for DES
+position=LUT/AES_AFTER_SBOX
+
+# The switch specific to DES, specifying the layout of the lookup table
+# WARNING: If attacking multiple SBOXES, the layout must be the same 
+# among them
+# Can be either of
+# DES_8_64 : 8 arrays of 64 values
+# DES_8_64_ROUND : same as DES_8_64 but target is round output, after
+#	recombination of SBOX output and half left state
+# DES_32_16 : 32 arrays of 16 values, where the offset is selected with 
+#	the first and last bits of the internal 6-bit values, and the
+#	lookup is done on the 4 middle bits
+# DES_4_BITS : Ignores lookup table and just compute the correlation 
+#	before the SBOX on the 4 middle bits. However, one must still 
+#	specify a file in order for it to work
+# DES_6_BITS : Ignores lookup table and just compute the correlation 
+#	before the SBOX on the 6 bits. However, one must still 
+#	specify a file in order for it to work
+#des_switch=DES_8_64
+
+# The round to attack. Only the first (round=0) is supported for the moment.
 round=0
 
-# 攻击哪个字节（0-3对应32位字的4个字节）
-bytenum=0
-# 或者攻击所有字节
+# The number of the key byte to attack. Can be either an integer or "all"
 #bytenum=all
+bytenum=0
 
-# 攻击模式：汉明重量或特定位
-# bitnum=none    # 汉明重量模型
-bitnum=all      # 攻击所有位
-# bitnum=3       # 攻击第3位
+# The bit number in the byte to attack. 
+# Options: none, all, <int>
+# Where int is 0, ..., 7 for AES and 0, ..., 3 for DES
+# Default (if unspecified) is none = Hamming Weight
+bitnum=all
 
-# 正确的密钥（16字节，32个十六进制字符）
-#correct_key=0x0123456789ABCDEF0123456789ABCDEF
-# 如果不知道完整密钥，可以注释掉或只给单字节
-# correct_key=0x12
+# The correct key if we know it. If unspecified, the program outputs
+# the highest correlation for all keys. If speficied, only outputs the
+# rank of the known key. This behavious is similar to inspector.
+# Might also be used later for known key attacks. 
+# Can be specified:
+#   as a single key byte (in decimal or in hexadecimal with 0x prefix),
+#   as the whole key in hex (0x8f f9 8b 4a 7a a3 5b 69 30 1c b2 a7 91 07 6b 7e)
+# WARNING: Specifying a single key byte does not work with DES, as we need
+#	the complete key to generate the round keys.
+#correct_key=100
+#correct_key=0x8f f9 8b 4a 7a a3 5b 69 30 1c b2 a7 91 07 6b 7e
+correct_key=0xaa
 
+# The memory available. Used with attack=50 only. Possible suffixes:
+# G: Giga
+# M: Mega
 memory=4G
+
+# The number of global correlation we keep track of.
 top=20
 
-# 可选：输出格式分隔符
-# separator=,
+# The separator for printing, if not specified, normal prints with many details
+# if something is specified, prints in the following format:
+# byte_number "sep" key_byte "sep" time "sep" key "sep" correlation
+# But this only works when the correct key specified
+#separator=, 
